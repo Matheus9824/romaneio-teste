@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de Controle - Romaneio Digital</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#fff; --ink:#1a1a1a; --muted:#6b7280;
+    --line:#d1d5db; --line2:#e5e7eb; --accent:#1e3a5f; --accentdark:#15293f;
+    --head:#374151; --ok:#16a34a; --okbg:#ecfdf5; --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.4;-webkit-text-size-adjust:100%}
+  .wrap{max-width:900px;margin:0 auto;padding:12px;padding-bottom:90px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);margin-bottom:14px;overflow:visible}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--accent);color:#fff;padding:12px 14px;border-radius:10px 10px 0 0}
+  .topbar h1{font-size:17px;margin:0;letter-spacing:.5px;font-weight:700}
+
+  /* stepper */
+  .steps{display:flex;gap:6px;padding:12px 14px;background:#fff;border:1px solid var(--line);border-top:none;border-radius:0 0 10px 10px;margin-bottom:14px}
+  .step{flex:1;text-align:center;font-size:11px;font-weight:700;color:var(--muted);position:relative;padding-top:26px;text-transform:uppercase;letter-spacing:.3px}
+  .step::before{content:attr(data-n);position:absolute;top:0;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-size:12px}
+  .step.active{color:var(--accent)}
+  .step.active::before{background:var(--accent);color:#fff}
+  .step.done::before{content:"✓";background:var(--ok);color:#fff}
+  .step.done{color:var(--ok)}
+
+  .section-title{background:var(--head);color:#fff;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:7px 12px;border-radius:10px 10px 0 0}
+  .pad{padding:14px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:13px;cursor:pointer;background:#fff;user-select:none;transition:.12s}
+  .chip input{display:none}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field.full{grid-column:1 / -1}
+  label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  label .req{color:#dc2626}
+  input,select{font-family:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:100%;transition:.12s}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,58,95,.12)}
+  /* campo de data: clicável (abre o calendário), mesma altura dos outros campos */
+  input[type=date]{cursor:pointer;min-height:46px;text-align:left;-webkit-appearance:none;appearance:none;display:block}
+  input[type=date]::-webkit-date-and-time-value{text-align:left;min-height:1.2em}
+  input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6}
+  select{cursor:pointer}
+  input.err{border-color:#dc2626;box-shadow:0 0 0 3px rgba(220,38,38,.12)}
+  .row2{display:grid;grid-template-columns:1fr 110px;gap:8px}
+  .hint{font-size:11px;color:var(--muted);margin-top:1px}
+
+  .ac{position:relative}
+  .ac-list{position:absolute;z-index:40;top:100%;left:0;right:0;background:#fff;border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;max-height:260px;overflow:auto;box-shadow:0 8px 20px rgba(0,0,0,.12)}
+  .ac-item{padding:11px;font-size:15px;cursor:pointer;border-bottom:1px solid var(--line2)}
+  .ac-item:last-child{border-bottom:none}
+  .ac-item:hover,.ac-item.sel{background:#eef2f7}
+  .ac-item .sub{font-size:11px;color:var(--muted);display:block;margin-top:1px}
+  .ac-item mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px}
+
+  .alturas{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}
+  .alturas input{text-align:center;padding:9px 4px;font-size:15px}
+  .med-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+  .vol{background:var(--okbg);border:1px solid #a7f3d0;border-radius:8px;padding:12px;grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+  .vol b{font-size:22px;color:#065f46}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border:1px solid var(--line2);padding:6px 8px;text-align:left}
+  th{background:#f3f4f6;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--head)}
+  td input{padding:7px;font-size:14px}
+  .reemb{display:flex;gap:12px;align-items:center;justify-content:center}
+  .reemb label{display:inline-flex;gap:4px;align-items:center;font-size:14px;font-weight:600;color:var(--ink);text-transform:none}
+
+  /* inserções */
+  .ins-item{border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:10px;background:#fafbfc;position:relative}
+  .ins-item .tag{position:absolute;top:-9px;left:12px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px}
+  .ins-del{position:absolute;top:10px;right:10px;background:#fff;border:1px solid #fca5a5;color:#b91c1c;border-radius:6px;font-size:12px;font-weight:700;padding:4px 9px;cursor:pointer}
+  .ins-edit{position:absolute;top:10px;right:10px;background:#fff;border:1.5px solid var(--accent);color:var(--accent);border-radius:7px;font-size:13px;font-weight:700;padding:6px 12px;cursor:pointer}
+  .ins-edit:active{background:#eef2f7}
+  .btn-add{width:100%;background:#fff;color:var(--accent);border:1.5px dashed var(--accent);border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer}
+
+  .navbtns{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(244,245,247,0),var(--bg) 35%);padding:12px;display:flex;gap:10px;max-width:900px;margin:0 auto}
+  .btn{flex:1;border:none;border-radius:10px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;transition:.12s}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:active{background:var(--accentdark)}
+  .btn-ghost{background:#fff;color:var(--accent);border:1.5px solid var(--accent)}
+  .btn-danger{background:#fff;color:#b91c1c;border:1.5px solid #fca5a5}
+  .btn.sm{flex:0 0 auto;padding:14px 18px}
+
+  .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(16px);background:#111827;color:#fff;padding:12px 20px;border-radius:30px;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3);z-index:200;transition:opacity .25s,transform .25s;max-width:90%;text-align:center;opacity:0;pointer-events:none;visibility:hidden}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;visibility:visible}
+
+  .screen{display:none}
+  .screen.active{display:block;animation:fade .2s}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .big-note{font-size:13px;color:var(--muted);background:#f9fafb;border:1px solid var(--line2);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+
+  /* ticket + km destaque */
+  .tk-group{margin-bottom:14px}
+  .tk-group .tk-cap{font-size:12px;font-weight:700;color:var(--head);margin-bottom:5px}
+  .ticket-opts{display:flex;gap:10px}
+  .tk{flex:1;font-size:26px;font-weight:800;padding:16px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--muted);cursor:pointer;transition:.12s;text-align:center}
+  .tk.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(30,58,95,.25)}
+  .tk-num{flex:0 0 auto;min-width:90px;cursor:default}
+  .km-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+  .km-in{font-size:20px;font-weight:700;padding:14px;text-align:center}
+  .km-total{background:#eef2f7;border:1px solid #cdd7e5;border-radius:12px;padding:12px 16px;text-align:center;min-width:110px}
+  .km-total span{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .km-total b{font-size:24px;color:var(--accent)}
+  @media(max-width:600px){ .km-grid{grid-template-columns:1fr 1fr}.km-total{grid-column:1/-1} }
+
+  /* foto canhoto */
+  .foto-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:18px;font-size:17px;font-weight:700;cursor:pointer}
+  .foto-btn:active{background:var(--accentdark)}
+  .foto-img{width:100%;border-radius:12px;border:1px solid var(--line);margin-bottom:10px;max-height:60vh;object-fit:contain;background:#000}
+  .foto-refaz{width:100%;background:#fff;color:var(--accent);border:1.5px solid var(--accent);border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer}
+  .foto-group{padding:12px 0;border-top:1px solid var(--line2)}
+  .foto-group:first-child{border-top:none;padding-top:0}
+  .foto-group .tk-cap{font-size:13px;font-weight:700;color:var(--head);margin-bottom:8px}
+  .btn-finalizar{flex:1;background:var(--ok);color:#fff;border:none;border-radius:10px;padding:16px;font-size:17px;font-weight:800;letter-spacing:.3px;cursor:pointer;box-shadow:0 2px 10px rgba(22,163,74,.35)}
+  .btn-finalizar:active{background:#15803d}
+  .btn-finalizar.is-disabled{background:#cbd5e1;box-shadow:none}
+
+  @media(max-width:600px){
+    .grid{grid-template-columns:1fr}
+    .alturas{grid-template-columns:repeat(2,1fr)}
+    .med-grid{grid-template-columns:1fr}
+    .topbar h1{font-size:15px}
+    .step{font-size:10px}
+  }
+  /* desktop: largura confortável e campos melhor distribuídos */
+  @media(min-width:601px){
+    .wrap{max-width:720px}
+    input,select{font-size:15px;padding:10px 12px}
+    .tk,.foto-btn,.btn,.btn-finalizar{font-size:15px}
+    /* datas lado a lado, sem esticar demais */
+    #scCarga .grid .field:has(#dataCarreg),
+    #scCarga .grid .field:has(#dataEntrega){max-width:260px}
+    input[type=date]{max-width:260px}
+    .navbtns{padding:12px 0}
+  }
+  @media print{
+    body{background:#fff}
+    .navbtns,.steps{display:none}
+    .screen{display:none!important}
+    #scRevisao{display:block!important}
+    .card{box-shadow:none;border:1px solid #000;break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <h1>FICHA DE CONTROLE</h1>
+    <span style="font-size:13px;opacity:.85" id="subtitulo">Romaneio Digital</span>
+  </div>
+  <div class="steps">
+    <div class="step active" data-n="1" id="st1">Placas</div>
+    <div class="step" data-n="2" id="st2">Nota / Carga</div>
+    <div class="step" data-n="3" id="st3">Ficha geral</div>
+  </div>
+
+  <!-- ===================== TELA 1: PLACAS ===================== -->
+  <section class="screen active" id="scPlacas">
+    <div class="card">
+      <div class="section-title">Veículo</div>
+      <div class="pad">
+        <div class="big-note">Comece pela placa do <b>cavalo</b> (obrigatória). Digite as primeiras letras e selecione na lista. As carretas/dolly são opcionais.</div>
+        <div class="grid">
+          <div class="field full ac">
+            <label>Placa do cavalo <span class="req">*</span></label>
+            <input id="placa" autocomplete="off" placeholder="Digite... ex: RFC" style="text-transform:uppercase">
+          </div>
+          <div class="field ac">
+            <label>Carreta 1</label>
+            <input id="carreta1" autocomplete="off" placeholder="Opcional" style="text-transform:uppercase">
+          </div>
+          <div class="field ac">
+            <label>Dolly</label>
+            <input id="dolly" autocomplete="off" placeholder="Opcional" style="text-transform:uppercase">
+          </div>
+          <div class="field ac">
+            <label>Carreta 2</label>
+            <input id="carreta2" autocomplete="off" placeholder="Opcional" style="text-transform:uppercase">
+          </div>
+          <div class="field full ac">
+            <label>Motorista</label>
+            <input id="motorista" autocomplete="off" placeholder="Digite... ex: EVE">
+            <div class="hint">Ao trocar a placa do cavalo, o motorista troca sozinho — mas você pode editar.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TELA 2: NOTA / CARGA ===================== -->
+  <section class="screen" id="scCarga">
+    <div class="card">
+      <div class="section-title">Carga principal</div>
+      <div class="pad">
+        <div class="grid">
+          <div class="field">
+            <label>Nº Romaneio / Controle <span class="req">*</span></label>
+            <input id="nControle" inputmode="numeric" placeholder="Nº do talão desta entrega">
+          </div>
+          <div class="field">
+            <label>Nº da Nota (NF-e)</label>
+            <input id="nf" inputmode="numeric" placeholder="Número da nota">
+          </div>
+          <div class="field full ac">
+            <label>Origem (Fornecedor)</label>
+            <input id="origem" autocomplete="off" placeholder="Digite a 1ª letra... ex: FAZ">
+            <div class="hint">Ex.: FAZENDA LOBO - UBERLANDIA</div>
+          </div>
+          <div class="field full ac">
+            <label>Destino (Cliente / Fábrica)</label>
+            <input id="destino" autocomplete="off" placeholder="Digite a 1ª letra... ex: CAR">
+            <div class="hint">Ex.: CARGILL AGRICOLA S A UBERLÂNDIA</div>
+          </div>
+          <div class="field">
+            <label>Data carregamento <span class="req">*</span></label>
+            <input id="dataCarreg" type="date">
+          </div>
+          <div class="field">
+            <label>Data entrega <span class="req">*</span></label>
+            <input id="dataEntrega" type="date">
+          </div>
+          <div class="field">
+            <label>Peso de entrega <span class="req">*</span></label>
+            <div class="row2">
+              <input id="qtdEntregue" inputmode="decimal" placeholder="0,00">
+              <input id="unEntregue" placeholder="Un" value="t">
+            </div>
+          </div>
+          <div class="field">
+            <label>Produto</label>
+            <select id="produtoPrinc"></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Carretas extras (cargas / notas)</div>
+      <div class="pad">
+        <div class="big-note">Tem mais de uma carreta/nota nesta viagem? Toque em <b>+ Adicionar carreta</b>. Se não tem, é só apertar <b>Seguir</b>.</div>
+        <div id="insLista"></div>
+        <button class="btn-add" id="btnAddIns">+ Adicionar carreta</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TELA 3: FICHA GERAL ===================== -->
+  <section class="screen" id="scRevisao">
+    <div class="card">
+      <div class="section-title">Produtos</div>
+      <div class="pad"><div class="chips" id="produtos"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Dados do carregamento</div>
+      <div class="pad">
+        <div class="grid">
+          <div class="field"><label>Nº Controle</label><input id="r_nControle" inputmode="numeric"></div>
+          <div class="field"><label>Nº NF-e</label><input id="r_nf" inputmode="numeric"></div>
+          <div class="field full ac"><label>Origem</label><input id="r_origem" autocomplete="off"></div>
+          <div class="field"><label>Data carregamento</label><input id="r_dataCarreg" type="date"></div>
+          <div class="field full ac"><label>Cliente / Destino</label><input id="r_destino" autocomplete="off"></div>
+          <div class="field"><label>Data entrega</label><input id="r_dataEntrega" type="date"></div>
+          <div class="field"><label>Qtde. entregue</label><div class="row2"><input id="r_qtdEntregue" inputmode="decimal" placeholder="0,00"><input id="r_unEntregue" value="t"></div></div>
+          <div class="field ac"><label>Motorista</label><input id="r_motorista" autocomplete="off"></div>
+          <div class="field ac"><label>Placa (cavalo)</label><input id="r_placa" autocomplete="off" style="text-transform:uppercase"></div>
+          <div class="field"><label>Carreta 1</label><input id="r_carreta1" style="text-transform:uppercase"></div>
+          <div class="field"><label>Dolly</label><input id="r_dolly" style="text-transform:uppercase"></div>
+          <div class="field"><label>Carreta 2</label><input id="r_carreta2" style="text-transform:uppercase"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Quilometragem</div>
+      <div class="pad">
+        <div class="km-grid">
+          <div class="field"><label>Km inicial <span class="req">*</span></label><input id="kmIni" class="km-in" inputmode="numeric" placeholder="0"></div>
+          <div class="field"><label>Km final <span class="req">*</span></label><input id="kmFim" class="km-in" inputmode="numeric" placeholder="0"></div>
+          <div class="km-total"><span>Km rodado</span><b id="kmTotal">0</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="cardIns">
+      <div class="section-title">Cargas da viagem</div>
+      <div class="pad" id="insResumo"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Observações / Recebimento</div>
+      <div class="pad"><div class="grid">
+        <div class="field full"><label>Observações</label><input id="obs" placeholder="Anotações..."></div>
+        <div class="field"><label>Recebimento (quem recebeu)</label><input id="recebimento" placeholder="Nome"></div>
+        <div class="field ac"><label>Assinatura motorista</label><input id="assinMot" placeholder="Nome do motorista"></div>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Canhotos da entrega</div>
+      <div class="pad">
+        <div class="big-note">Tire a foto do <b>canhoto da nota</b> de cada carga (assinado/carimbado na entrega). Com todas as fotos tiradas, libera o botão de finalizar.</div>
+        <div id="fotosGroups"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- NAV -->
+<div class="navbtns" id="nav"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+window.DADOS = {"origens": [{"nome": "EMBALATEC INDUSTRIAL LTDA", "cidade": "Itararé/SP", "cod": "2796", "label": "EMBALATEC INDUSTRIAL LTDA - ITARARÉ", "uf": "SP", "cidadeNome": "ITARARÉ"}, {"nome": "ESTOQUE ABAPÃ - CASTRO", "cidade": "Castro/PR", "cod": "9575", "label": "ESTOQUE ABAPÃ - CASTRO", "uf": "PR", "cidadeNome": "CASTRO"}, {"nome": "ESTOQUE CATANDUVA", "cidade": "Catanduva/SP", "cod": "579", "label": "ESTOQUE CATANDUVA", "uf": "SP", "cidadeNome": "CATANDUVA"}, {"nome": "ESTOQUE ITARARE", "cidade": "Itarare/SP", "cod": "5577", "label": "ESTOQUE ITARARE", "uf": "SP", "cidadeNome": "ITARARE"}, {"nome": "ESTOQUE UBERLÂNDIA", "cidade": "Uberlandia/MG", "cod": "6799", "label": "ESTOQUE UBERLÂNDIA - UBERLANDIA", "uf": "MG", "cidadeNome": "UBERLANDIA"}, {"nome": "FAZENDA ANA MARIA - SOROCABA", "cidade": "Sorocaba/SP", "cod": "7115", "label": "FAZENDA ANA MARIA - SOROCABA", "uf": "SP", "cidadeNome": "SOROCABA"}, {"nome": "FAZENDA BONIN - SÃO MANUEL", "cidade": "Sao Manuel/SP", "cod": "7757", "label": "FAZENDA BONIN - SÃO MANUEL - SAO MANUEL", "uf": "SP", "cidadeNome": "SAO MANUEL"}, {"nome": "FAZENDA BRASCOT - GUAIRA", "cidade": "Guaira/SP", "cod": "9506", "label": "FAZENDA BRASCOT - GUAIRA", "uf": "SP", "cidadeNome": "GUAIRA"}, {"nome": "FAZENDA FACCHINI - CATANDUVA", "cidade": "Catanduva/SP", "cod": "10194", "label": "FAZENDA FACCHINI - CATANDUVA", "uf": "SP", "cidadeNome": "CATANDUVA"}, {"nome": "FAZENDA LOBO - UBERLANDIA", "cidade": "Uberlandia/MG", "cod": "9564", "label": "FAZENDA LOBO - UBERLANDIA", "uf": "MG", "cidadeNome": "UBERLANDIA"}, {"nome": "FAZENDA MATA PAULISTA - VAZANTE", "cidade": "Vazante/MG", "cod": "1061", "label": "FAZENDA MATA PAULISTA - VAZANTE", "uf": "MG", "cidadeNome": "VAZANTE"}, {"nome": "FAZENDA PORANGABA", "cidade": "Igarapava/SP", "cod": "9833", "label": "FAZENDA PORANGABA - IGARAPAVA", "uf": "SP", "cidadeNome": "IGARAPAVA"}, {"nome": "FAZENDA SALOBO - VAZANTE", "cidade": "Vazante/MG", "cod": "10039", "label": "FAZENDA SALOBO - VAZANTE", "uf": "MG", "cidadeNome": "VAZANTE"}, {"nome": "FAZENDA SANTA FÉ - JOSÉ BONIFÁCIO", "cidade": "Jose Bonifacio/SP", "cod": "10186", "label": "FAZENDA SANTA FÉ - JOSÉ BONIFÁCIO - JOSE BONIFACIO", "uf": "SP", "cidadeNome": "JOSE BONIFACIO"}, {"nome": "FAZENDA SERINGAL", "cidade": "Aramina/SP", "cod": "9879", "label": "FAZENDA SERINGAL - ARAMINA", "uf": "SP", "cidadeNome": "ARAMINA"}, {"nome": "INDUSTRIA E COMERCIO DE MADEIRAS KLOCKER LTDA", "cidade": "Itararé/SP", "cod": "6592", "label": "INDUSTRIA E COMERCIO DE MADEIRAS KLOCKER LTDA - ITARARÉ", "uf": "SP", "cidadeNome": "ITARARÉ"}, {"nome": "MAURO CESAR NARQUES", "cidade": "Conquista/MG", "cod": "5345", "label": "MAURO CESAR NARQUES - CONQUISTA", "uf": "MG", "cidadeNome": "CONQUISTA"}, {"nome": "REGINALDO PINTO DE ALMEIDA E OUTROS", "cidade": "Sacramento/MG", "cod": "1000", "label": "REGINALDO PINTO DE ALMEIDA E OUTROS - SACRAMENTO", "uf": "MG", "cidadeNome": "SACRAMENTO"}, {"nome": "RGJ EVENTOS E LOCACOES LTDA", "cidade": "Itarare/SP", "cod": "6600", "label": "RGJ EVENTOS E LOCACOES LTDA - ITARARE", "uf": "SP", "cidadeNome": "ITARARE"}, {"nome": "SENGES PAPEL E CELULOSE LTDA", "cidade": "Sengés/PR", "cod": "1322", "label": "SENGES PAPEL E CELULOSE LTDA - SENGÉS", "uf": "PR", "cidadeNome": "SENGÉS"}], "destinos": [{"nome": "AGROFOODS BRASIL ALIMENTO S/A", "cidade": "Orlândia/SP", "cod": "6041", "label": "AGROFOODS BRASIL ALIMENTO S/A ORLÂNDIA", "uf": "SP", "cidadeNome": "ORLÂNDIA"}, {"nome": "BIOSTEAM CONTERMA ENERGIA LTDA", "cidade": "Amparo/SP", "cod": "9359", "label": "BIOSTEAM CONTERMA ENERGIA LTDA AMPARO", "uf": "SP", "cidadeNome": "AMPARO"}, {"nome": "CARGILL AGRICOLA S A", "cidade": "Bebedouro/SP", "cod": "5959", "label": "CARGILL AGRICOLA S A BEBEDOURO", "uf": "SP", "cidadeNome": "BEBEDOURO"}, {"nome": "CARGILL AGRICOLA S A", "cidade": "Itumbiara/GO", "cod": "6489", "label": "CARGILL AGRICOLA S A ITUMBIARA", "uf": "GO", "cidadeNome": "ITUMBIARA"}, {"nome": "CARGILL AGRICOLA S A", "cidade": "Mairinque/SP", "cod": "6660", "label": "CARGILL AGRICOLA S A MAIRINQUE", "uf": "SP", "cidadeNome": "MAIRINQUE"}, {"nome": "CARGILL AGRICOLA S A", "cidade": "Uberlândia/MG", "cod": "5891", "label": "CARGILL AGRICOLA S A UBERLÂNDIA", "uf": "MG", "cidadeNome": "UBERLÂNDIA"}, {"nome": "COCAM CIA DE CAFE SOLUVEL E DERIVADOS 1", "cidade": "CATANDUVA/SP", "cod": "594", "label": "COCAM CIA DE CAFE SOLUVEL E DERIVADOS 1 CATANDUVA", "uf": "SP", "cidadeNome": "CATANDUVA"}, {"nome": "COMBIO ENERGIA S.A.", "cidade": "Alumínio/SP", "cod": "5106", "label": "COMBIO ENERGIA S.A. ALUMÍNIO", "uf": "SP", "cidadeNome": "ALUMÍNIO"}, {"nome": "COMBIO ENERGIA S.A.", "cidade": "Angatuba/SP", "cod": "5133", "label": "COMBIO ENERGIA S.A. ANGATUBA", "uf": "SP", "cidadeNome": "ANGATUBA"}, {"nome": "COMBIO ENERGIA S.A.", "cidade": "Mogi Guacu/SP", "cod": "5410", "label": "COMBIO ENERGIA S.A. MOGI GUACU", "uf": "SP", "cidadeNome": "MOGI GUACU"}, {"nome": "COMBIO ENERGIA S.A.", "cidade": "Piracicaba/SP", "cod": "5419", "label": "COMBIO ENERGIA S.A. PIRACICABA", "uf": "SP", "cidadeNome": "PIRACICABA"}, {"nome": "ESTOQUE CATANDUVA", "cidade": "Catanduva/SP", "cod": "579", "label": "ESTOQUE CATANDUVA", "uf": "SP", "cidadeNome": "CATANDUVA"}, {"nome": "ESTOQUE ITARARE", "cidade": "Itarare/SP", "cod": "4642", "label": "ESTOQUE ITARARE", "uf": "SP", "cidadeNome": "ITARARE"}, {"nome": "FAZENDA LOBO - UBERLANDIA", "cidade": "Uberlandia/MG", "cod": "9564", "label": "FAZENDA LOBO - UBERLANDIA", "uf": "MG", "cidadeNome": "UBERLANDIA"}, {"nome": "FUGINI ALIMENTOS LTDA.", "cidade": "Monte Alto/SP", "cod": "2475", "label": "FUGINI ALIMENTOS LTDA. MONTE ALTO", "uf": "SP", "cidadeNome": "MONTE ALTO"}, {"nome": "INGEL ENERGIA LTDA", "cidade": "Franca/SP", "cod": "6728", "label": "INGEL ENERGIA LTDA FRANCA", "uf": "SP", "cidadeNome": "FRANCA"}, {"nome": "SALMERON ENERGIA RENOVAVEL E PROTECAO AO CLIMA MG LTDA", "cidade": "Passos/MG", "cod": "962", "label": "SALMERON ENERGIA RENOVAVEL E PROTECAO AO CLIMA MG LTDA PASSOS", "uf": "MG", "cidadeNome": "PASSOS"}, {"nome": "SALMERON ENERGIA RENOVAVEL E PROTECAO AO CLIMA MG LTDA", "cidade": "Uberlândia/MG", "cod": "978", "label": "SALMERON ENERGIA RENOVAVEL E PROTECAO AO CLIMA MG LTDA UBERLÂNDIA", "uf": "MG", "cidadeNome": "UBERLÂNDIA"}, {"nome": "SALMERON ENERGIA RENOVÁVEL E PROTEÇÃO AO CLIMA SP LTDA", "cidade": "Taquaritinga/SP", "cod": "8348", "label": "SALMERON ENERGIA RENOVÁVEL E PROTEÇÃO AO CLIMA SP LTDA TAQUARITINGA", "uf": "SP", "cidadeNome": "TAQUARITINGA"}, {"nome": "TERRA NUTRI INDUSTRIA DE SUBSTRATOS AGRICOLAS LTDA", "cidade": "COSMóPOLIS/SP", "cod": "477", "label": "TERRA NUTRI INDUSTRIA DE SUBSTRATOS AGRICOLAS LTDA COSMÓPOLIS", "uf": "SP", "cidadeNome": "COSMÓPOLIS"}, {"nome": "VIDA VERDE INDUSTRIA E COMERCIO DE INSUMOS ORGANICOS LTDA", "cidade": "Mogi Mirim/SP", "cod": "5651", "label": "VIDA VERDE INDUSTRIA E COMERCIO DE INSUMOS ORGANICOS LTDA MOGI MIRIM", "uf": "SP", "cidadeNome": "MOGI MIRIM"}], "motoristas": [{"nome": "ADAIR ALVES DO AMARAL", "placa": "FYX6I21"}, {"nome": "ADEILDO NUNES DE OLIVEIRA", "placa": "TKG3B49"}, {"nome": "ADEILDO NUNES DE OLIVEIRA JUNIOR", "placa": "ELO1D73"}, {"nome": "BRUNO HENRIQUE ARAUJO DOS SANTOS", "placa": "CNI4B98"}, {"nome": "BRUNO NOGAROLI BELOTTI", "placa": "AGY2C80"}, {"nome": "CARLOS DENIS SILVA DE OLIVEIRA", "placa": "CUA8E99"}, {"nome": "CRISTIANO NASCIMENTO ROCHA", "placa": "TLT6C27"}, {"nome": "DAVID RUTZ", "placa": "BRT6C23"}, {"nome": "DIEGO NUNES", "placa": "GJI3J48"}, {"nome": "EVERALDO FORTES DIAS", "placa": "FQP2J88"}, {"nome": "FABIO JULIO PRAIS", "placa": "GJO8J93"}, {"nome": "FABIO PERPETUO PEREZ BERNAL", "placa": "FHV0I34"}, {"nome": "GABRIEL PEREIRA CARDOZO", "placa": "BAX6G60"}, {"nome": "GILBERTO ARAUJO ANDRADE", "placa": "RFC6E01"}, {"nome": "GILSON EVERSON BARBOSA", "placa": "FLW9J76"}, {"nome": "JHONATHAN MATEUS PEREZ COUTO", "placa": "QVG6D69"}, {"nome": "JOAO HENRIQUE DA SILVA CARVALHO", "placa": "BAX6G60"}, {"nome": "JOILSON BUENO CONCEICAO", "placa": "ELO1D73"}, {"nome": "JONATAS FRANCISCO SANTOS", "placa": "END1I49"}, {"nome": "JULIANO DA SILVA", "placa": "BAX6G60"}, {"nome": "KIEFFER RODRIGUES DOS SANTOS", "placa": "FYX6I21"}, {"nome": "LEANDRO DE OLIVEIRA", "placa": "SWS2G79"}, {"nome": "LUIZ CARLOS BIANCHI", "placa": "TLP1A47"}, {"nome": "LUIZ OTAVIO PEREZ", "placa": "TJH7C16"}, {"nome": "MARCELO JESUS DE FREITAS", "placa": "DYB7E59"}, {"nome": "MARCELO RODRIGUES PERES", "placa": "BAZ9J93"}, {"nome": "MARCIO OLIVEIRA DE LIIMA", "placa": "QVI5E85"}, {"nome": "MARCOS ROBERTO PERES", "placa": "TJN8D55"}, {"nome": "Mauro Cesar Narques", "placa": "CNR8B97"}, {"nome": "NAOR CARVALHO DA COSTA", "placa": "BZZ2I43"}, {"nome": "NELSON BRANCALHÃO NETO", "placa": "BAX6G60"}, {"nome": "OLAICON SOUZA ANDRADE", "placa": "DYB7E59"}, {"nome": "PAULO SERGIO DE OLIVEIRA FEITOSA - FILHO", "placa": "CPI1I15"}, {"nome": "PAULO SERGIO GOMES FEITOSA", "placa": "LYT3J26"}, {"nome": "REGINALDO DE OLIVEIRA MELO", "placa": "FJH9170"}, {"nome": "RONALDO PEREIRA NOGUEIRA", "placa": "QVI5E85"}, {"nome": "RONALDO RODRIGUES DE CARVALHO", "placa": "QVI5E85"}, {"nome": "SERGIO FROIS", "placa": "RFC6E01"}, {"nome": "SERGIO LOPES", "placa": "BAI7G86"}, {"nome": "VINICIUS DE LUCAS BRUNO", "placa": "FHH0I74"}, {"nome": "WESLER ANTONIO GIL GONÇALVES", "placa": "GSC3C50"}, {"nome": "WESLEY WENER FREIRE CLAUDINO", "placa": "TMB8B35"}, {"nome": "YCARO GUILHERME DE LIMA DO NASCIMENTO", "placa": "TKG2B08"}], "placas": ["AGY2C80", "BAI7G86", "BAX6G60", "BAZ9J93", "BRT6C23", "BZZ2I43", "CNI4B98", "CNR8B97", "CPI1I15", "CUA8E99", "DYB7E59", "EEE2I75", "ELO1D73", "END1I49", "FHH0I74", "FHV0I34", "FJH9170", "FLW9J76", "FPQ8H97", "FQP2J88", "FYX6I21", "GCK4C94", "GJI3J48", "GJO8788", "GJO8J93", "GSC3C50", "LYT3J26", "QVG6D69", "QVI5E85", "RFC6E01", "SWS2G79", "TJH7C16", "TJN8D55", "TKG2B08", "TKG3B49", "TLP1A47", "TLT6C27", "TMB8B35"], "produtos": ["CASCA DE PINUS", "CASCA DE PINUS DECORATIVA", "CAVACO DE MADEIRA", "LENHA"], "unidades": ["M3", "m³", "sc", "t"], "unidadePorProduto": {"CAVACO DE MADEIRA": "t", "LENHA": "m³", "CASCA DE PINUS": "m³", "CASCA DE PINUS DECORATIVA": "sc"}};
+</script>
+<script>
+const D = window.DADOS || {origens:[],destinos:[],motoristas:[],placas:[],produtos:[],unidades:[]};
+let passo = 1;
+
+/* ---------- utils ---------- */
+function norm(s){return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();}
+function highlight(label,q){if(!q)return label;const i=norm(label).indexOf(norm(q));if(i<0)return label;return label.slice(0,i)+'<mark>'+label.slice(i,i+q.length)+'</mark>'+label.slice(i+q.length);}
+function num(v){v=(v||'').toString().replace('.','').replace(',','.');const n=parseFloat(v);return isNaN(n)?0:n;}
+function br(n){return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+/* máscara de peso: os 2 PRIMEIROS dígitos são a parte inteira; o resto são decimais.
+   21 -> 21 ; 218 -> 21,8 ; 2185 -> 21,85 ; 21856 -> 21,856 */
+function mascaraPeso(v){
+  let dig=(v||'').toString().replace(/\D/g,'');   // só números
+  if(dig==='') return '';
+  if(dig.length<=2) return dig;                   // ainda digitando a parte inteira
+  return dig.slice(0,2)+','+dig.slice(2);         // 2 inteiros + vírgula + decimais
+}
+function ligarMascaraPeso(el){
+  if(!el) return;
+  el.addEventListener('input',()=>{
+    const start=el.value;
+    el.value=mascaraPeso(el.value);
+    // mantém cursor no fim (comportamento natural de teclado numérico)
+  });
+}
+let toastTimer=null;
+function toast(m){
+  if(!m) return;                       // nunca mostra balão vazio
+  const t=document.getElementById('toast');
+  t.textContent=m; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+function $(id){return document.getElementById(id);}
+
+/* ---------- autocomplete ---------- */
+function autocomplete(inputId, items, getLabel, getSub, onPick){
+  const input=$(inputId); if(!input) return;
+  const box=input.closest('.ac'); let list=null, sel=-1, filtered=[];
+  function close(){if(list){list.remove();list=null;}sel=-1;}
+  function open(){
+    const q=input.value.trim();
+    filtered=items.filter(it=>{const L=norm(getLabel(it));if(!q)return true;return L.includes(norm(q))||L.split(/[ \-\/]+/).some(w=>w.startsWith(norm(q)));});
+    const nq=norm(q);
+    filtered.sort((a,b)=>{const la=norm(getLabel(a)),lb=norm(getLabel(b));return (la.startsWith(nq)?0:1)-(lb.startsWith(nq)?0:1)||la.localeCompare(lb);});
+    close(); if(!filtered.length)return;
+    list=document.createElement('div');list.className='ac-list';
+    filtered.slice(0,40).forEach((it,idx)=>{
+      const d=document.createElement('div');d.className='ac-item';
+      let h=highlight(getLabel(it),q); if(getSub&&getSub(it))h+='<span class="sub">'+getSub(it)+'</span>';
+      d.innerHTML=h; d.addEventListener('mousedown',e=>{e.preventDefault();pick(idx);}); list.appendChild(d);
+    });
+    box.appendChild(list);
+  }
+  function pick(idx){const it=filtered[idx];if(!it)return;input.value=getLabel(it);if(onPick)onPick(it);close();}
+  input.addEventListener('input',open); input.addEventListener('focus',open);
+  input.addEventListener('blur',()=>setTimeout(close,160));
+  input.addEventListener('keydown',e=>{
+    if(!list)return; const its=list.querySelectorAll('.ac-item');
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,its.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'){e.preventDefault();if(sel>=0)pick(sel);else if(its.length===1)pick(0);return;}
+    else if(e.key==='Escape'){close();return;}
+    its.forEach((el,i)=>el.classList.toggle('sel',i===sel)); if(sel>=0)its[sel].scrollIntoView({block:'nearest'});
+  });
+}
+const placaItems=D.placas.map(p=>({placa:p}));
+
+/* Tela 1 */
+autocomplete('placa', placaItems, it=>it.placa, ()=>'', it=>{
+  const m=D.motoristas.find(mm=>mm.placa===it.placa); if(m) $('motorista').value=m.nome;
+});
+autocomplete('carreta1', placaItems, it=>it.placa, ()=>'');
+autocomplete('dolly', placaItems, it=>it.placa, ()=>'');
+autocomplete('carreta2', placaItems, it=>it.placa, ()=>'');
+autocomplete('motorista', D.motoristas, it=>it.nome, it=>it.placa?('Placa '+it.placa):'', it=>{if(it.placa && !$('placa').value)$('placa').value=it.placa;});
+
+/* Tela 2 */
+autocomplete('origem', D.origens, it=>it.label, it=>it.cod?('Cód. '+it.cod+' • '+it.cidade):it.cidade);
+autocomplete('destino', D.destinos, it=>it.label, it=>it.cod?('Cód. '+it.cod+' • '+it.cidade):it.cidade);
+const selProd=$('produtoPrinc');
+selProd.innerHTML='<option value="">—</option>'+D.produtos.map(p=>'<option>'+p+'</option>').join('');
+const UNID = D.unidadePorProduto || {};
+selProd.addEventListener('change',()=>{
+  const u = UNID[selProd.value];
+  if(u) $('unEntregue').value=u;   // troca a unidade conforme o produto (editável depois)
+});
+
+/* Tela 3 */
+autocomplete('r_origem', D.origens, it=>it.label, it=>it.cidade);
+autocomplete('r_destino', D.destinos, it=>it.label, it=>it.cidade);
+autocomplete('r_motorista', D.motoristas, it=>it.nome, it=>it.placa?('Placa '+it.placa):'');
+autocomplete('r_placa', placaItems, it=>it.placa, ()=>'', it=>{
+  const m=D.motoristas.find(mm=>mm.placa===it.placa); if(m) $('r_motorista').value=m.nome;
+});
+autocomplete('assinMot', D.motoristas, it=>it.nome, ()=>'');
+
+/* máscara de peso nos campos principais (2 casas decimais automáticas) */
+ligarMascaraPeso($('qtdEntregue'));
+ligarMascaraPeso($('r_qtdEntregue'));
+
+/* produtos chips */
+D.produtos.forEach(p=>{
+  const l=document.createElement('label');l.className='chip';
+  l.innerHTML='<input type="checkbox" value="'+p+'"><span>'+p+'</span>';
+  l.querySelector('input').addEventListener('change',e=>l.classList.toggle('on',e.target.checked));
+  $('produtos').appendChild(l);
+});
+function marcarProduto(p){
+  document.querySelectorAll('#produtos .chip').forEach(c=>{const inp=c.querySelector('input');if(inp.value===p){inp.checked=true;c.classList.add('on');}});
+}
+
+/* km rodado = final - inicial (nunca negativo; final deve ser > inicial) */
+function calcKm(){
+  const iniRaw=($('kmIni').value||'').replace(/\D/g,'');
+  const fimRaw=($('kmFim').value||'').replace(/\D/g,'');
+  const ini=parseInt(iniRaw,10)||0;
+  const fim=parseInt(fimRaw,10)||0;
+  const tot=$('kmTotal');
+  if(fimRaw!=='' && iniRaw!=='' && fim<=ini){
+    tot.textContent='⚠ inválido';
+    tot.style.color='#dc2626';
+  } else {
+    tot.textContent=Math.max(fim-ini,0).toLocaleString('pt-BR');
+    tot.style.color='';
+  }
+}
+$('kmIni').addEventListener('input',calcKm);
+$('kmFim').addEventListener('input',calcKm);
+
+/* fotos dos canhotos — uma por carga (principal + inserções) */
+let fotosCanhoto=[]; // fotosCanhoto[i] = dataURL da carga i
+function montarFotos(cargas){
+  // mantém fotos já tiradas das cargas que ainda existem
+  fotosCanhoto.length = cargas.length;
+  const wrap=$('fotosGroups'); wrap.innerHTML='';
+  cargas.forEach((c,i)=>{
+    const g=document.createElement('div'); g.className='foto-group';
+    g.innerHTML=
+      '<div class="tk-cap">Canhoto — '+c.rot+'</div>'+
+      '<input type="file" class="foto-in" accept="image/*" capture="environment" style="display:none">'+
+      '<button type="button" class="foto-btn btn-tirar"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:7px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Tirar foto do canhoto</button>'+
+      '<div class="foto-prev" style="display:none">'+
+        '<img class="foto-img" alt="Canhoto '+(i+1)+'">'+
+        '<button type="button" class="foto-refaz btn-refaz">↻ Tirar outra foto</button>'+
+      '</div>';
+    wrap.appendChild(g);
+    const inp=g.querySelector('.foto-in'), prev=g.querySelector('.foto-prev'),
+          img=g.querySelector('.foto-img'), btn=g.querySelector('.btn-tirar');
+    // restaura foto já tirada
+    if(fotosCanhoto[i]){ img.src=fotosCanhoto[i]; prev.style.display='block'; btn.style.display='none'; }
+    g.querySelector('.btn-tirar').addEventListener('click',()=>inp.click());
+    g.querySelector('.btn-refaz').addEventListener('click',()=>inp.click());
+    inp.addEventListener('change',e=>{
+      const file=e.target.files[0]; if(!file)return;
+      const reader=new FileReader();
+      reader.onload=ev=>{
+        fotosCanhoto[i]=ev.target.result;
+        img.src=ev.target.result; prev.style.display='block'; btn.style.display='none';
+        atualizarBotaoFinalizar(); // libera o botão quando todas as fotos estiverem prontas
+        toast('✓ Foto '+(i+1)+' anexada');
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+}
+function todasFotosTiradas(){
+  const n=$('fotosGroups')?$('fotosGroups').children.length:0;
+  if(n===0) return false;
+  for(let i=0;i<n;i++){ if(!fotosCanhoto[i]) return false; } // slot vazio = falta foto
+  return true;
+}
+
+/* ---------- Inserções (lista dinâmica) ---------- */
+let insCount=0;
+const insData=[]; // guardamos refs dos inputs via DOM
+function addInsercao(){
+  insCount++;
+  const id='ins'+insCount;
+  const div=document.createElement('div'); div.className='ins-item'; div.dataset.id=id;
+  div.innerHTML=
+    '<span class="tag">Carreta '+(insCount+1)+'</span>'+
+    '<button class="ins-del" type="button">remover</button>'+
+    '<div class="grid" style="margin-top:6px">'+
+      '<div class="field"><label>Nº Romaneio</label><input class="i-rom" inputmode="numeric" placeholder="Número"></div>'+
+      '<div class="field"><label>Nº da Nota</label><input class="i-nf" inputmode="numeric" placeholder="Número"></div>'+
+      '<div class="field"><label>Peso</label><div class="row2"><input class="i-peso" inputmode="decimal" placeholder="0,00"><input class="i-un" value="t"></div></div>'+
+      '<div class="field"><label>Produto</label><select class="i-prod"></select></div>'+
+      '<div class="field full ac"><label>Origem (se diferente)</label><input class="i-origem" autocomplete="off" placeholder="Opcional"></div>'+
+      '<div class="field full ac"><label>Destino (se diferente)</label><input class="i-destino" autocomplete="off" placeholder="Opcional"></div>'+
+    '</div>';
+  $('insLista').appendChild(div);
+  // produto da inserção + unidade automática
+  const prodSel=div.querySelector('.i-prod');
+  prodSel.innerHTML='<option value="">—</option>'+D.produtos.map(p=>'<option>'+p+'</option>').join('');
+  prodSel.addEventListener('change',()=>{const u=(D.unidadePorProduto||{})[prodSel.value];if(u)div.querySelector('.i-un').value=u;});
+  ligarMascaraPeso(div.querySelector('.i-peso')); // peso da inserção com vírgula automática
+  // autocomplete nos campos internos
+  const oIn=div.querySelector('.i-origem'), dIn=div.querySelector('.i-destino');
+  acOn(oIn, D.origens, it=>it.label, it=>it.cidade);
+  acOn(dIn, D.destinos, it=>it.label, it=>it.cidade);
+  div.querySelector('.ins-del').addEventListener('click',()=>{div.remove();renumerarIns();});
+}
+function renumerarIns(){
+  [...$('insLista').children].forEach((el,i)=>el.querySelector('.tag').textContent='Carreta '+(i+2));
+  insCount=$('insLista').children.length;
+}
+// autocomplete direto num elemento (não por id)
+function acOn(input, items, getLabel, getSub, onPick){
+  const box=input.closest('.ac'); let list=null,sel=-1,filtered=[];
+  function close(){if(list){list.remove();list=null;}sel=-1;}
+  function open(){
+    const q=input.value.trim();
+    filtered=items.filter(it=>{const L=norm(getLabel(it));if(!q)return true;return L.includes(norm(q))||L.split(/[ \-\/]+/).some(w=>w.startsWith(norm(q)));});
+    const nq=norm(q); filtered.sort((a,b)=>{const la=norm(getLabel(a)),lb=norm(getLabel(b));return (la.startsWith(nq)?0:1)-(lb.startsWith(nq)?0:1)||la.localeCompare(lb);});
+    close(); if(!filtered.length)return; list=document.createElement('div');list.className='ac-list';
+    filtered.slice(0,30).forEach((it,idx)=>{const d=document.createElement('div');d.className='ac-item';let h=highlight(getLabel(it),q);if(getSub&&getSub(it))h+='<span class="sub">'+getSub(it)+'</span>';d.innerHTML=h;d.addEventListener('mousedown',e=>{e.preventDefault();input.value=getLabel(filtered[idx]);close();});list.appendChild(d);});
+    box.appendChild(list);
+  }
+  input.addEventListener('input',open);input.addEventListener('focus',open);input.addEventListener('blur',()=>setTimeout(close,160));
+}
+$('btnAddIns').addEventListener('click',addInsercao);
+
+function coletarIns(){
+  return [...$('insLista').children].map((el,i)=>({
+    n:i+1,
+    romaneio:el.querySelector('.i-rom').value,
+    nf:el.querySelector('.i-nf').value,
+    peso:el.querySelector('.i-peso').value,
+    un:el.querySelector('.i-un').value,
+    produto:el.querySelector('.i-prod').value,
+    origem:el.querySelector('.i-origem').value,
+    destino:el.querySelector('.i-destino').value
+  })).filter(x=>x.romaneio||x.nf||x.peso||x.origem||x.destino);
+}
+
+/* ---------- Navegação entre telas ---------- */
+function irPara(n){
+  passo=n;
+  if(n===3) sincronizarParaRevisao(); // sempre reflete as cargas atuais (fotos, tickets, resumo)
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  ['scPlacas','scCarga','scRevisao'][n-1] && $(['scPlacas','scCarga','scRevisao'][n-1]).classList.add('active');
+  // stepper
+  [1,2,3].forEach(i=>{const st=$('st'+i);st.classList.remove('active','done');if(i<n)st.classList.add('done');else if(i===n)st.classList.add('active');});
+  $('subtitulo').textContent=['Passo 1 de 3 — Placas','Passo 2 de 3 — Nota e carga','Passo 3 de 3 — Confira e finalize'][n-1];
+  window.scrollTo({top:0,behavior:'smooth'});
+  renderNav();
+}
+
+function renderNav(){
+  const nav=$('nav');
+  if(passo===1){
+    nav.innerHTML='<button class="btn btn-primary" id="n1">Seguir →</button>';
+    $('n1').onclick=()=>{
+      const p=$('placa'); if(!p.value.trim()){p.classList.add('err');toast('Informe a placa do cavalo');p.focus();return;}
+      p.classList.remove('err'); irPara(2);
+    };
+  } else if(passo===2){
+    nav.innerHTML='<button class="btn btn-ghost sm" id="nback">← Voltar</button><button class="btn btn-primary" id="n2">Seguir →</button>';
+    $('nback').onclick=()=>irPara(1);
+    $('n2').onclick=()=>{ if(!validarCarga())return; sincronizarParaRevisao(); irPara(3); };
+  } else {
+    nav.innerHTML='<button class="btn btn-ghost sm" id="nback">← Voltar</button>'+
+      '<button class="btn-finalizar is-disabled" id="finalizar">✅ FINALIZAR VIAGEM</button>';
+    $('nback').onclick=()=>irPara(2);
+    $('finalizar').onclick=()=>{
+      if($('finalizar').classList.contains('is-disabled')){ toast('Tire a foto do canhoto de cada carga'); return; }
+      finalizarViagem();
+    };
+    atualizarBotaoFinalizar();
+  }
+}
+
+/* botão verde só fica ativo quando todas as fotos do canhoto foram tiradas */
+function atualizarBotaoFinalizar(){
+  const fb=$('finalizar'); if(!fb) return;
+  const ok=todasFotosTiradas();
+  fb.classList.toggle('is-disabled',!ok);
+  fb.textContent = ok ? '✅ FINALIZAR VIAGEM' : 'Tire as fotos para finalizar';
+}
+
+/* valida obrigatórios da Tela 2: Nº romaneio, datas, peso */
+function validarCarga(){
+  const obrig=[
+    ['nControle','o Nº de Romaneio / Controle'],
+    ['dataCarreg','a Data de carregamento'],
+    ['dataEntrega','a Data de entrega'],
+    ['qtdEntregue','o Peso de entrega']
+  ];
+  document.querySelectorAll('#scCarga .err').forEach(e=>e.classList.remove('err'));
+  for(const [id,nome] of obrig){
+    const el=$(id);
+    if(!el.value.trim()){ el.classList.add('err'); toast('Preencha '+nome); el.focus(); return false; }
+  }
+  return true;
+}
+
+/* passa dados das telas 1 e 2 para a ficha geral (tela 3) */
+function sincronizarParaRevisao(){
+  $('r_nControle').value=$('nControle').value;
+  $('r_nf').value=$('nf').value;
+  $('r_origem').value=$('origem').value;
+  $('r_destino').value=$('destino').value;
+  $('r_dataCarreg').value=$('dataCarreg').value;
+  $('r_dataEntrega').value=$('dataEntrega').value;
+  $('r_qtdEntregue').value=$('qtdEntregue').value;
+  $('r_unEntregue').value=$('unEntregue').value||'t';
+  $('r_motorista').value=$('motorista').value;
+  $('r_placa').value=$('placa').value;
+  $('r_carreta1').value=$('carreta1').value;
+  $('r_dolly').value=$('dolly').value;
+  $('r_carreta2').value=$('carreta2').value;
+  if(!$('assinMot').value) $('assinMot').value=$('motorista').value;
+  if($('produtoPrinc').value) marcarProduto($('produtoPrinc').value);
+  // inserções resumo
+  const ins=coletarIns();
+  // rótulos das cargas (principal + inserções), mostrando romaneio/nota
+  function rot(rom,nf,fallback){
+    const p=[]; if(rom)p.push('Rom. '+rom); if(nf)p.push('Nota '+nf);
+    return p.length?p.join(' · '):fallback;
+  }
+  const cargas=[{rot:rot($('nControle').value,$('nf').value,'Carreta 1')}];
+  ins.forEach((x,i)=>cargas.push({rot:rot(x.romaneio,x.nf,'Carreta '+(i+2))}));
+  montarFotos(cargas); // 1 foto de canhoto por carga
+
+  // card "Cargas da viagem": carga principal + cada inserção
+  const prin={
+    tag:'Carreta 1',
+    romaneio:$('nControle').value, nf:$('nf').value,
+    peso:$('qtdEntregue').value, un:$('unEntregue').value||'t',
+    produto:$('produtoPrinc').value, origem:$('origem').value, destino:$('destino').value
+  };
+  const todas=[prin];
+  // inserção herda produto/origem/destino da principal quando o motorista não preencheu
+  ins.forEach((x,i)=>todas.push({
+    tag:'Carreta '+(i+2), romaneio:x.romaneio, nf:x.nf, peso:x.peso,
+    un:x.un||prin.un,
+    produto:x.produto||prin.produto,
+    origem:x.origem||prin.origem,
+    destino:x.destino||prin.destino
+  }));
+  $('cardIns').style.display='';
+  $('insResumo').innerHTML=todas.map(x=>
+    '<div class="ins-item"><span class="tag">'+x.tag+'</span>'+
+    '<button type="button" class="ins-edit" onclick="irPara(2)">Editar</button>'+
+    '<div style="margin-top:8px;font-size:14px;line-height:1.6">'+
+    (x.romaneio?'<b>Romaneio:</b> '+x.romaneio+'<br>':'')+
+    (x.nf?'<b>NF:</b> '+x.nf+'<br>':'')+
+    (x.peso?'<b>Peso:</b> '+x.peso+' '+(x.un||'')+'<br>':'')+
+    (x.produto?'<b>Produto:</b> '+x.produto+'<br>':'')+
+    (x.origem?'<b>Origem:</b> '+x.origem+'<br>':'')+
+    (x.destino?'<b>Destino:</b> '+x.destino:'')+'</div></div>'
+  ).join('');
+}
+
+/* ---------- Coletar tudo + salvar ---------- */
+function coletar(){
+  const prods=[...document.querySelectorAll('#produtos input:checked')].map(i=>i.value);
+  return {
+    nControle:$('r_nControle').value, produtos:prods,
+    origem:$('r_origem').value, dataCarreg:$('r_dataCarreg').value,
+    destino:$('r_destino').value, dataEntrega:$('r_dataEntrega').value,
+    qtdEntregue:$('r_qtdEntregue').value, unEntregue:$('r_unEntregue').value,
+    nf:$('r_nf').value,
+    motorista:$('r_motorista').value, placa:$('r_placa').value,
+    carreta1:$('r_carreta1').value, dolly:$('r_dolly').value, carreta2:$('r_carreta2').value,
+    kmIni:$('kmIni').value, kmFim:$('kmFim').value,
+    insercoes:coletarInsHerdado(),
+    obs:$('obs').value, recebimento:$('recebimento').value, assinMot:$('assinMot').value,
+    salvoEm:new Date().toISOString()
+  };
+}
+// inserções com produto/origem/destino/unidade herdados da carga principal quando vazios
+function coletarInsHerdado(){
+  const pPro=$('produtoPrinc').value, pOri=$('origem').value, pDes=$('destino').value, pUn=$('unEntregue').value||'t';
+  return coletarIns().map(x=>({
+    ...x,
+    un:x.un||pUn, produto:x.produto||pPro, origem:x.origem||pOri, destino:x.destino||pDes
+  }));
+}
+function finalizarViagem(){
+  // garante que o valor do campo em edição foi confirmado (iOS pode segurar o último dígito)
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  const d=coletar();
+  const obrig=[
+    [d.nControle,'r_nControle','o Nº de Romaneio / Controle'],
+    [d.placa,'r_placa','a Placa do cavalo'],
+    [d.dataCarreg,'r_dataCarreg','a Data de carregamento'],
+    [d.dataEntrega,'r_dataEntrega','a Data de entrega'],
+    [d.qtdEntregue,'r_qtdEntregue','o Peso de entrega'],
+    [d.kmIni,'kmIni','o Km inicial'],
+    [d.kmFim,'kmFim','o Km final']
+  ];
+  document.querySelectorAll('#scRevisao .err').forEach(e=>e.classList.remove('err'));
+  for(const [val,id,nome] of obrig){
+    if(!(''+val).trim()){ toast('Preencha '+nome); const el=$(id); el.classList.add('err'); el.focus(); return; }
+  }
+  // km tem que fazer sentido: final > inicial, nada negativo
+  const ini=parseInt((d.kmIni||'').replace(/\D/g,''),10);
+  const fim=parseInt((d.kmFim||'').replace(/\D/g,''),10);
+  if(isNaN(ini)||isNaN(fim)){ toast('Preencha o Km inicial e final'); return; }
+  if(fim<=ini){ toast('O Km final tem que ser maior que o inicial'); $('kmFim').classList.add('err'); $('kmFim').focus(); return; }
+  if(!todasFotosTiradas()){ toast('Tire a foto do canhoto de cada carga'); return; }
+  d.fotosCanhoto=fotosCanhoto.slice();
+  // salva localmente, mas nunca deixa um erro de armazenamento travar o finalizar
+  try{
+    const fichas=JSON.parse(localStorage.getItem('rom_fichas')||'[]');
+    fichas.push(d);
+    localStorage.setItem('rom_fichas',JSON.stringify(fichas));
+  }catch(e){
+    // localStorage cheio (fotos grandes) ou indisponível — guarda ao menos sem as fotos
+    try{
+      const leve={...d}; delete leve.fotosCanhoto;
+      const fichas=JSON.parse(localStorage.getItem('rom_fichas')||'[]');
+      fichas.push(leve);
+      localStorage.setItem('rom_fichas',JSON.stringify(fichas));
+    }catch(_){ /* segue mesmo assim */ }
+  }
+  mostrarFinalizada(d);
+}
+
+function mostrarFinalizada(d){
+  // linha por carga: "Romaneio X · Nota Y"
+  function linha(rom,nf){
+    const p=[]; if(rom)p.push('Romaneio <b>'+rom+'</b>'); if(nf)p.push('Nota <b>'+nf+'</b>');
+    return p.join(' · ');
+  }
+  const linhas=[linha(d.nControle,d.nf)];
+  (d.insercoes||[]).forEach(x=>{ const l=linha(x.romaneio,x.nf); if(l)linhas.push(l); });
+  const bloco=linhas.map(l=>
+    '<p style="color:#374151;font-size:16px;margin:2px 0">'+l+'</p>'
+  ).join('')+
+    '<p style="color:#16a34a;font-size:16px;font-weight:700;margin:8px 0 0">'+(linhas.length>1?'Registrados':'Registrado')+'.</p>';
+  const w=document.querySelector('.wrap');
+  w.innerHTML=
+    '<div style="text-align:center;padding:60px 20px">'+
+    '<div style="font-size:72px;line-height:1">✅</div>'+
+    '<h1 style="color:#16a34a;font-size:26px;margin:16px 0 10px">Viagem finalizada!</h1>'+
+    bloco+
+    '<p style="color:#9ca3af;font-size:13px;margin-top:8px">'+(d.origem||'')+' → '+(d.destino||'')+'</p>'+
+    '<button class="btn-finalizar" style="max-width:280px;margin:28px auto 0" id="novaViagem">+ Nova viagem</button>'+
+    '</div>';
+  document.getElementById('nav').innerHTML='';
+  document.getElementById('novaViagem').onclick=()=>location.reload();
+}
+
+/* fecha o teclado ao tocar fora de um campo (iOS não faz isso sozinho) */
+document.addEventListener('touchend',e=>{
+  const alvo=e.target;
+  const ehCampo = alvo.closest && alvo.closest('input, select, textarea, button, .ac-list, .tk, label');
+  if(!ehCampo && document.activeElement && document.activeElement.blur){
+    document.activeElement.blur();
+  }
+},{passive:true});
+
+/* start */
+irPara(1);
+</script>
+</body>
+</html>
